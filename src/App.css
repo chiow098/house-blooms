@@ -1,38 +1,124 @@
-.App {
-  text-align: center;
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap");
+
+:root {
+  --pink-50: #fff0f5;
+  --pink-100: #ffe0eb;
+  --pink-200: #ffb3cc;
+  --pink-300: #ff80aa;
+  --pink-400: #ff4d88;
+  --pink-500: #e91e63;
+  --pink-600: #c2185b;
+  --rose: #f06292;
+  --blush: #fce4ec;
+  --cream: #fff8f9;
+  --dark: #2d1b2e;
+  --gray: #6b5b6e;
+  --light-gray: #f5f0f5;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 8px rgba(233, 30, 99, 0.08);
+  --shadow-md: 0 4px 20px rgba(233, 30, 99, 0.12);
+  --shadow-lg: 0 8px 40px rgba(233, 30, 99, 0.18);
+  --radius: 16px;
+  --radius-sm: 8px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+body {
+  font-family: "Jost", sans-serif;
+  background-color: var(--cream);
+  color: var(--dark);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Cormorant Garamond", serif;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--pink-500), var(--pink-600));
   color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-family: "Jost", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--pink-400), var(--pink-500));
 }
 
-.App-link {
-  color: #61dafb;
+.btn-outline {
+  background: transparent;
+  color: var(--pink-500);
+  border: 1.5px solid var(--pink-300);
+  padding: 11px 28px;
+  border-radius: 50px;
+  font-family: "Jost", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-outline:hover {
+  background: var(--blush);
+  border-color: var(--pink-500);
+  transform: translateY(-2px);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-bestseller {
+  background: #fff3e0;
+  color: #e65100;
+}
+.badge-new {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.badge-sale {
+  background: #fce4ec;
+  color: #c2185b;
+}
+.badge-popular {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+.badge-premium {
+  background: #fdf6e3;
+  color: #b8860b;
+}
+
+input,
+select,
+textarea {
+  font-family: "Jost", sans-serif;
 }
