@@ -9,7 +9,6 @@ export default function Checkout() {
   const [deliveryMethod, setDeliveryMethod] = useState("diantar");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
-  // eslint-disable-next-line no-unused-vars
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -152,6 +151,18 @@ export default function Checkout() {
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   style={{ width: "100%", padding: "14px 16px", border: "2px solid #f0f0f0", borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {/* Catatan Pesanan */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", marginBottom: 8, color: "#555", fontWeight: 500, fontSize: 14 }}>📝 Catatan Pesanan (Opsional)</label>
+                <textarea
+                  placeholder="Contoh: Bungkus kado, tulis ucapan selamat, dll."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  style={{ width: "100%", padding: "14px 16px", border: "2px solid #f0f0f0", borderRadius: 12, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }}
                 />
               </div>
 
