@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import "./AdminDashboard.css";
 import { db } from "../firebase";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, push, update, remove } from "firebase/database";
 import { Menu, X } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -16,10 +16,9 @@ const AdminDashboard = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false); // ⭐ TAMBAH INI
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    id: "",
     name: "",
     price: "",
     category: "",
@@ -28,6 +27,7 @@ const AdminDashboard = () => {
     description: "",
   });
 
+  // Load login logs dari Firebase
   useEffect(() => {
     const logsRef = ref(db, "loginLogs");
     const unsubscribe = onValue(logsRef, (snapshot) => {
@@ -45,49 +45,49 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, []);
 
+  // Load products dari Firebase (REALTIME)
   useEffect(() => {
-    const savedProducts = localStorage.getItem("hb_products");
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    } else {
-      const defaultProducts = [
-        { id: 1, name: "Elinor", price: 85000, category: "Buket", stock: 15, image: "/images/Elinor.jpeg", description: "Buket bunga Elinor elegan" },
-        { id: 2, name: "Faelyn", price: 95000, category: "Buket", stock: 12, image: "/images/Faelyn.jpeg", description: "Buket bunga Faelyn cantik" },
-        { id: 3, name: "Jaccy", price: 75000, category: "Buket", stock: 20, image: "/images/Jaccy.jpeg", description: "Buket bunga Jaccy segar" },
-        { id: 4, name: "Lexxa", price: 120000, category: "Buket", stock: 8, image: "/images/Lexxa.jpeg", description: "Buket bunga Lexxa mewah" },
-        { id: 5, name: "Marie", price: 65000, category: "Buket", stock: 25, image: "/images/Marie.jpeg", description: "Buket bunga Marie manis" },
-        { id: 6, name: "Than", price: 55000, category: "Buket", stock: 18, image: "/images/Than.jpeg", description: "Buket bunga Than ceria" },
-        { id: 7, name: "Wuan", price: 70000, category: "Buket", stock: 14, image: "/images/Wuan.jpeg", description: "Buket bunga Wuan unik" },
-      ];
-      setProducts(defaultProducts);
-      localStorage.setItem("hb_products", JSON.stringify(defaultProducts));
-    }
+    const productsRef = ref(db, "products");
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const productsList = Object.entries(data).map(([key, value]) => ({
+          ...value,
+          id: key,
+          firebaseKey: key,
+        }));
+        setProducts(productsList);
+      } else {
+        setProducts([]);
+      }
+    });
+    return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (products.length > 0) {
-      localStorage.setItem("hb_products", JSON.stringify(products));
-    }
-  }, [products]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const productData = {
+      name: formData.name,
+      price: Number(formData.price),
+      category: formData.category,
+      stock: Number(formData.stock),
+      image: formData.image,
+      description: formData.description,
+    };
+
     if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? { ...formData, id: editingProduct.id, price: Number(formData.price), stock: Number(formData.stock) }
-            : p
-        )
-      );
+      // Update existing product
+      const productRef = ref(db, `products/${editingProduct.firebaseKey}`);
+      await update(productRef, productData);
     } else {
-      const newId = products.length > 0 ? Math.max(...products.map((p) => p.id)) + 1 : 1;
-      setProducts((prev) => [...prev, { ...formData, id: newId, price: Number(formData.price), stock: Number(formData.stock) }]);
+      // Add new product
+      const productsRef = ref(db, "products");
+      await push(productsRef, productData);
     }
     resetForm();
   };
@@ -95,24 +95,35 @@ const AdminDashboard = () => {
   const handleEdit = (product) => {
     setEditingProduct(product);
     setFormData({
-      id: product.id, name: product.name, price: product.price,
-      category: product.category, stock: product.stock,
-      image: product.image, description: product.description,
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      stock: product.stock,
+      image: product.image,
+      description: product.description,
     });
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (product) => {
     if (window.confirm("Yakin ingin menghapus produk ini?")) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      const productRef = ref(db, `products/${product.firebaseKey}`);
+      await remove(productRef);
     }
   };
 
   const resetForm = () => {
-    setFormData({ id: "", name: "", price: "", category: "", stock: "", image: "", description: "" });
+    setFormData({
+      name: "",
+      price: "",
+      category: "",
+      stock: "",
+      image: "",
+      description: "",
+    });
     setEditingProduct(null);
     setShowForm(false);
-  }
+  };
 
   const handleOrderStatusChange = (order, newStatus) => {
     updateOrderStatus(order.firebaseKey, newStatus);
@@ -125,10 +136,10 @@ const AdminDashboard = () => {
   );
 
   const totalProducts = products.length;
-  const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+  const totalStock = products.reduce((sum, p) => sum + (p.stock || 0), 0);
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const lowStock = products.filter((p) => p.stock < 10).length;
+  const lowStock = products.filter((p) => (p.stock || 0) < 10).length;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -137,11 +148,10 @@ const AdminDashboard = () => {
       case "Dikirim": return "#9c27b0";
       case "Selesai": return "#4caf50";
       case "Dibatalkan": return "#f44336";
-      default: return "#999";
+      default: return "#ffffff";
     }
   };
 
-  // ⭐ TAMBAH: fungsi untuk tutup sidebar saat tab diklik di mobile
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     setSidebarOpen(false);
@@ -149,7 +159,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      {/* ⭐ TAMBAH: Overlay untuk tutup sidebar di mobile */}
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
@@ -179,7 +188,6 @@ const AdminDashboard = () => {
 
       <main className="admin-main">
         <header className="admin-header">
-          {/* ⭐ TAMBAH: Hamburger menu untuk mobile */}
           <div className="header-left">
             <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
               {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
@@ -230,15 +238,15 @@ const AdminDashboard = () => {
                     <tr><th>Produk</th><th>Kategori</th><th>Stok</th><th>Status</th></tr>
                   </thead>
                   <tbody>
-                    {products.filter((p) => p.stock < 10).map((product) => (
+                    {products.filter((p) => (p.stock || 0) < 10).map((product) => (
                       <tr key={product.id}>
                         <td><div className="product-cell"><img src={product.image} alt={product.name} /><span>{product.name}</span></div></td>
                         <td>{product.category}</td>
-                        <td className={product.stock < 5 ? "urgent" : ""}>{product.stock}</td>
-                        <td><span className={`badge ${product.stock < 5 ? "danger" : "warning"}`}>{product.stock < 5 ? "Kritis" : "Menipis"}</span></td>
+                        <td className={(product.stock || 0) < 5 ? "urgent" : ""}>{product.stock || 0}</td>
+                        <td><span className={`badge ${(product.stock || 0) < 5 ? "danger" : "warning"}`}>{(product.stock || 0) < 5 ? "Kritis" : "Menipis"}</span></td>
                       </tr>
                     ))}
-                    {products.filter((p) => p.stock < 10).length === 0 && (
+                    {products.filter((p) => (p.stock || 0) < 10).length === 0 && (
                       <tr><td colSpan="4" className="empty">Semua stok aman 🌸</td></tr>
                     )}
                   </tbody>
@@ -319,12 +327,12 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td><span className="category-badge">{product.category}</span></td>
-                      <td>Rp {product.price.toLocaleString()}</td>
-                      <td className={product.stock < 10 ? "low-stock" : ""}>{product.stock}</td>
+                      <td>Rp {(product.price || 0).toLocaleString()}</td>
+                      <td className={(product.stock || 0) < 10 ? "low-stock" : ""}>{product.stock || 0}</td>
                       <td>
                         <div className="action-buttons">
                           <button className="btn-edit" onClick={() => handleEdit(product)} title="Edit">✏️</button>
-                          <button className="btn-delete" onClick={() => handleDelete(product.id)} title="Hapus">🗑️</button>
+                          <button className="btn-delete" onClick={() => handleDelete(product)} title="Hapus">🗑️</button>
                         </div>
                       </td>
                     </tr>
