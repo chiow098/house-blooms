@@ -9,6 +9,7 @@ export default function Checkout() {
   const [deliveryMethod, setDeliveryMethod] = useState("diantar");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
