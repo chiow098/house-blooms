@@ -14,20 +14,13 @@ const Cart = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background:
-            "linear-gradient(135deg, #fff5f7 0%, #ffe4ec 50%, #fff0f3 100%)",
+          background: "linear-gradient(135deg, #fff5f7 0%, #ffe4ec 50%, #fff0f3 100%)",
         }}
       >
         <div style={{ textAlign: "center", padding: 40 }}>
-          <span style={{ fontSize: 80, display: "block", marginBottom: 20 }}>
-            🛒
-          </span>
-          <h2 style={{ color: "#d63384", margin: "0 0 10px" }}>
-            Keranjang Kosong
-          </h2>
-          <p style={{ color: "#888", margin: "0 0 25px" }}>
-            Tambahkan produk favoritmu
-          </p>
+          <span style={{ fontSize: 80, display: "block", marginBottom: 20 }}>🛒</span>
+          <h2 style={{ color: "#d63384", margin: "0 0 10px" }}>Keranjang Kosong</h2>
+          <p style={{ color: "#888", margin: "0 0 25px" }}>Tambahkan produk favoritmu</p>
           <button
             onClick={() => navigate("/catalog")}
             style={{
@@ -53,34 +46,26 @@ const Cart = () => {
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #fff5f7 0%, #ffe4ec 50%, #fff0f3 100%)",
-        padding: "40px 20px",
+        background: "linear-gradient(135deg, #fff5f7 0%, #ffe4ec 50%, #fff0f3 100%)",
+        padding: "20px",
       }}
     >
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <h2 style={{ color: "#d63384", fontSize: 28, margin: "0 0 30px" }}>
+        <h2 style={{ color: "#d63384", fontSize: 24, margin: "0 0 20px", fontWeight: 600 }}>
           🛒 Keranjang Belanja
         </h2>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 15,
-            marginBottom: 30,
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
           {cart.map((item) => (
             <div
               key={item.id}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 20,
+                gap: 15,
                 background: "white",
                 borderRadius: 16,
-                padding: 20,
+                padding: "16px",
                 boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
               }}
             >
@@ -88,90 +73,100 @@ const Cart = () => {
                 src={item.image}
                 alt={item.name}
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 70,
+                  height: 70,
                   objectFit: "cover",
                   borderRadius: 12,
                   border: "2px solid #ffc2d1",
+                  flexShrink: 0,
                 }}
               />
 
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 5px", color: "#333", fontSize: 16 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ margin: "0 0 4px", color: "#333", fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {item.name}
                 </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    color: "#d63384",
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
+                <p style={{ margin: 0, color: "#d63384", fontSize: 14, fontWeight: 600 }}>
                   Rp {item.price.toLocaleString()}
                 </p>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Quantity Controls */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 <button
                   onClick={() => updateQty(item.id, item.qty - 1)}
                   style={{
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     borderRadius: "50%",
-                    border: "2px solid #ffc2d1",
+                    border: "1.5px solid #ffc2d1",
                     background: "white",
                     color: "#d63384",
                     cursor: "pointer",
-                    fontSize: 16,
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
                   }}
                 >
-                  -
+                  −
                 </button>
-                <span
-                  style={{ minWidth: 30, textAlign: "center", fontWeight: 600 }}
-                >
+                <span style={{ minWidth: 24, textAlign: "center", fontWeight: 600, fontSize: 14 }}>
                   {item.qty}
                 </span>
                 <button
                   onClick={() => updateQty(item.id, item.qty + 1)}
                   style={{
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     borderRadius: "50%",
-                    border: "2px solid #ffc2d1",
+                    border: "1.5px solid #ffc2d1",
                     background: "white",
                     color: "#d63384",
                     cursor: "pointer",
-                    fontSize: 16,
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
                   }}
                 >
                   +
                 </button>
               </div>
 
+              {/* Total Price */}
               <span
                 style={{
                   color: "#d63384",
                   fontWeight: 700,
-                  minWidth: 100,
+                  fontSize: 15,
+                  minWidth: 90,
                   textAlign: "right",
+                  flexShrink: 0,
                 }}
               >
                 Rp {(item.price * item.qty).toLocaleString()}
               </span>
 
+              {/* Delete Button */}
               <button
                 onClick={() => removeFromCart(item.id)}
                 style={{
-                  background: "#ffebee",
+                  background: "none",
                   border: "none",
                   borderRadius: 8,
-                  padding: "8px 12px",
+                  padding: "6px",
                   cursor: "pointer",
                   color: "#f44336",
-                  fontSize: 16,
+                  fontSize: 18,
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
+                title="Hapus item"
               >
                 🗑️
               </button>
@@ -179,11 +174,12 @@ const Cart = () => {
           ))}
         </div>
 
+        {/* Summary Card */}
         <div
           style={{
             background: "white",
             borderRadius: 20,
-            padding: 30,
+            padding: "25px",
             boxShadow: "0 10px 40px rgba(255,107,157,0.1)",
           }}
         >
@@ -191,35 +187,35 @@ const Cart = () => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              marginBottom: 15,
+              marginBottom: 12,
               color: "#555",
-              fontSize: 16,
+              fontSize: 15,
             }}
           >
             <span>Subtotal</span>
-            <span>Rp {cartTotal.toLocaleString()}</span>
+            <span style={{ fontWeight: 500 }}>Rp {cartTotal.toLocaleString()}</span>
           </div>
+
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              paddingTop: 20,
+              alignItems: "center",
+              paddingTop: 16,
               borderTop: "2px solid #ffc2d1",
             }}
           >
-            <span style={{ color: "#333", fontWeight: 600, fontSize: 18 }}>
-              Total
-            </span>
-            <span style={{ color: "#d63384", fontWeight: 700, fontSize: 24 }}>
+            <span style={{ color: "#333", fontWeight: 600, fontSize: 16 }}>Total</span>
+            <span style={{ color: "#d63384", fontWeight: 700, fontSize: 22 }}>
               Rp {cartTotal.toLocaleString()}
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: 15, marginTop: 25 }}>
+          <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
             <button
               onClick={clearCart}
               style={{
-                padding: "14px 25px",
+                padding: "14px 20px",
                 background: "white",
                 color: "#f44336",
                 border: "2px solid #ffc2d1",
@@ -227,9 +223,10 @@ const Cart = () => {
                 cursor: "pointer",
                 fontSize: 14,
                 fontWeight: 600,
+                flexShrink: 0,
               }}
             >
-              Kosongkan
+              🗑️ Kosongkan
             </button>
             <button
               onClick={() => navigate("/checkout")}
@@ -244,6 +241,10 @@ const Cart = () => {
                 fontSize: 16,
                 fontWeight: 600,
                 boxShadow: "0 4px 15px rgba(255,107,157,0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
               Checkout →
