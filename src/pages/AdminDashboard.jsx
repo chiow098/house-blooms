@@ -3,6 +3,7 @@ import { useApp } from "../context/AppContext";
 import "./AdminDashboard.css";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
+import { Menu, X } from "lucide-react";
 
 const AdminDashboard = () => {
   const { orders, updateOrderStatus, updateOrderDelivery, updateOrderNote, users } = useApp();
@@ -15,6 +16,7 @@ const AdminDashboard = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ⭐ TAMBAH INI
 
   const [formData, setFormData] = useState({
     id: "",
@@ -110,7 +112,7 @@ const AdminDashboard = () => {
     setFormData({ id: "", name: "", price: "", category: "", stock: "", image: "", description: "" });
     setEditingProduct(null);
     setShowForm(false);
-  };
+  }
 
   const handleOrderStatusChange = (order, newStatus) => {
     updateOrderStatus(order.firebaseKey, newStatus);
@@ -139,28 +141,37 @@ const AdminDashboard = () => {
     }
   };
 
+  // ⭐ TAMBAH: fungsi untuk tutup sidebar saat tab diklik di mobile
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="admin-dashboard">
-      <aside className="admin-sidebar">
+      {/* ⭐ TAMBAH: Overlay untuk tutup sidebar di mobile */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="admin-logo">
           <span className="logo-icon">🌸</span>
           <h2>House Blooms</h2>
           <p>Admin Panel</p>
         </div>
         <nav className="admin-nav">
-          <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>
+          <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => handleTabClick("dashboard")}>
             <span>📊</span> Dashboard
           </button>
-          <button className={activeTab === "products" ? "active" : ""} onClick={() => setActiveTab("products")}>
+          <button className={activeTab === "products" ? "active" : ""} onClick={() => handleTabClick("products")}>
             <span>🌷</span> Produk
           </button>
-          <button className={activeTab === "orders" ? "active" : ""} onClick={() => setActiveTab("orders")}>
+          <button className={activeTab === "orders" ? "active" : ""} onClick={() => handleTabClick("orders")}>
             <span>📦</span> Pesanan
           </button>
-          <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>
+          <button className={activeTab === "users" ? "active" : ""} onClick={() => handleTabClick("users")}>
             <span>👥</span> Pengguna
           </button>
-          <button className={activeTab === "logs" ? "active" : ""} onClick={() => setActiveTab("logs")}>
+          <button className={activeTab === "logs" ? "active" : ""} onClick={() => handleTabClick("logs")}>
             <span>📋</span> Riwayat Login
           </button>
         </nav>
@@ -168,13 +179,19 @@ const AdminDashboard = () => {
 
       <main className="admin-main">
         <header className="admin-header">
-          <h1>
-            {activeTab === "dashboard" && "Dashboard"}
-            {activeTab === "products" && "Manajemen Produk"}
-            {activeTab === "orders" && "Daftar Pesanan"}
-            {activeTab === "users" && "Daftar Pengguna"}
-            {activeTab === "logs" && "Riwayat Login"}
-          </h1>
+          {/* ⭐ TAMBAH: Hamburger menu untuk mobile */}
+          <div className="header-left">
+            <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+            <h1>
+              {activeTab === "dashboard" && "Dashboard"}
+              {activeTab === "products" && "Manajemen Produk"}
+              {activeTab === "orders" && "Daftar Pesanan"}
+              {activeTab === "users" && "Daftar Pengguna"}
+              {activeTab === "logs" && "Riwayat Login"}
+            </h1>
+          </div>
           <div className="admin-user">
             <span>👤 Admin</span>
           </div>
