@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { db, auth } from "../firebase";
-import { ref, onValue, push, update } from "firebase/database";
+import { ref, onValue, push, update, set } from "firebase/database";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -13,19 +13,24 @@ const AppContext = createContext();
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
+
   useEffect(() => {
-    const loadProducts = () => {
-      const saved = localStorage.getItem("hb_products");
-      if (saved) setProducts(JSON.parse(saved));
-    };
-    loadProducts();
-    window.addEventListener("storage", loadProducts);
-    const interval = setInterval(loadProducts, 1000);
-    return () => {
-      window.removeEventListener("storage", loadProducts);
-      clearInterval(interval);
-    };
+    const productsRef = ref(db, "products");
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const productsList = Object.entries(data).map(([key, value]) => ({
+          ...value,
+          id: key,
+        }));
+        setProducts(productsList);
+      } else {
+        setProducts([]);
+      }
+    });
+    return () => unsubscribe();
   }, []);
+
   return products;
 }
 
@@ -35,10 +40,11 @@ export function AppProvider({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
 
   const ADMIN_EMAIL = "admin@houseblooms.com";
 
-  // Listen auth state + catat log login
+  // Listen auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
@@ -52,7 +58,6 @@ export function AppProvider({ children }) {
         setUser(userData);
         setIsAdmin(adminStatus);
 
-        // Catat riwayat login ke Firebase
         const now = new Date();
         const logRef = ref(db, "loginLogs");
         push(logRef, {
@@ -65,6 +70,24 @@ export function AppProvider({ children }) {
       } else {
         setUser(null);
         setIsAdmin(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load products dari Firebase
+  useEffect(() => {
+    const productsRef = ref(db, "products");
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const productsList = Object.entries(data).map(([key, value]) => ({
+          ...value,
+          id: key,
+        }));
+        setProducts(productsList);
+      } else {
+        setProducts([]);
       }
     });
     return () => unsubscribe();
@@ -130,8 +153,6 @@ export function AppProvider({ children }) {
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
     } catch (error) {
-      console.log("Login error code:", error.code);
-      console.log("Login error message:", error.message);
       return { success: false, message: "Email atau password salah" };
     }
   };
@@ -140,8 +161,7 @@ export function AppProvider({ children }) {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(result.user, { displayName: name });
-      
-      // Simpan data user ke Firebase
+
       const userRef = ref(db, `users/${result.user.uid}`);
       await update(userRef, {
         id: result.user.uid,
@@ -150,7 +170,7 @@ export function AppProvider({ children }) {
         isAdmin: false,
         createdAt: new Date().toISOString(),
       });
-      
+
       return { success: true };
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -186,12 +206,27 @@ export function AppProvider({ children }) {
     update(orderRef, { adminNote: note });
   };
 
+  const addProduct = (product) => {
+    const productsRef = ref(db, "products");
+    push(productsRef, product);
+  };
+
+  const updateProduct = (id, updates) => {
+    const productRef = ref(db, `products/${id}`);
+    update(productRef, updates);
+  };
+
+  const deleteProduct = (id) => {
+    const productRef = ref(db, `products/${id}`);
+    set(productRef, null);
+  };
+
   return (
     <AppContext.Provider value={{
       cart, addToCart, removeFromCart, updateQty, clearCart,
       cartCount, cartTotal, user, isAdmin, login, register, logout,
       orders, addOrder, updateOrderStatus, updateOrderDelivery, updateOrderNote,
-      users,
+      users, products, addProduct, updateProduct, deleteProduct,
     }}>
       {children}
     </AppContext.Provider>
