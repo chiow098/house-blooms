@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Flower2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
@@ -12,24 +12,22 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    setTimeout(() => {
-      const result = login(email, password);
-      if (result.success) {
-        navigate("/");
-      } else {
-        setError(result.message);
-      }
-      setLoading(false);
-    }, 800);
+    
+    const result = await login(email, password);
+    if (result.success) {
+      navigate("/");
+    } else {
+      setError(result.message);
+    }
+    setLoading(false);
   };
 
   return (
@@ -44,7 +42,6 @@ export default function Login() {
         padding: 24,
       }}
     >
-      {/* Decorative circles */}
       <div
         style={{
           position: "fixed",
@@ -81,7 +78,6 @@ export default function Login() {
           border: "1px solid var(--pink-100)",
         }}
       >
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div
             style={{
@@ -116,7 +112,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Demo accounts */}
         <div
           style={{
             background: "var(--pink-50)",
@@ -179,9 +174,7 @@ export default function Login() {
           ))}
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Email */}
           <div style={{ marginBottom: 16 }}>
             <label
               style={{
@@ -231,7 +224,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Password */}
           <div style={{ marginBottom: 24 }}>
             <label
               style={{
@@ -300,7 +292,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <div
               style={{

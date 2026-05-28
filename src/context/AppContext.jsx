@@ -38,18 +38,30 @@ export function AppProvider({ children }) {
 
   const ADMIN_EMAIL = "admin@houseblooms.com";
 
-  // Listen auth state
+  // Listen auth state + catat log login
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         const adminStatus = firebaseUser.email === ADMIN_EMAIL;
-        setUser({
+        const userData = {
           id: firebaseUser.uid,
           name: firebaseUser.displayName || firebaseUser.email,
           email: firebaseUser.email,
           isAdmin: adminStatus,
-        });
+        };
+        setUser(userData);
         setIsAdmin(adminStatus);
+
+        // Catat riwayat login ke Firebase
+        const now = new Date();
+        const logRef = ref(db, "loginLogs");
+        push(logRef, {
+          name: userData.name,
+          email: userData.email,
+          date: now.toLocaleDateString("id-ID"),
+          time: now.toLocaleTimeString("id-ID"),
+          timestamp: now.getTime(),
+        });
       } else {
         setUser(null);
         setIsAdmin(false);
@@ -71,6 +83,24 @@ export function AppProvider({ children }) {
         setOrders(ordersList.reverse());
       } else {
         setOrders([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load users dari Firebase
+  useEffect(() => {
+    const usersRef = ref(db, "users");
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const usersList = Object.entries(data).map(([key, value]) => ({
+          ...value,
+          id: key,
+        }));
+        setUsers(usersList);
+      } else {
+        setUsers([]);
       }
     });
     return () => unsubscribe();
@@ -100,6 +130,8 @@ export function AppProvider({ children }) {
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
     } catch (error) {
+      console.log("Login error code:", error.code);
+      console.log("Login error message:", error.message);
       return { success: false, message: "Email atau password salah" };
     }
   };
@@ -108,6 +140,17 @@ export function AppProvider({ children }) {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(result.user, { displayName: name });
+      
+      // Simpan data user ke Firebase
+      const userRef = ref(db, `users/${result.user.uid}`);
+      await update(userRef, {
+        id: result.user.uid,
+        name: name,
+        email: email,
+        isAdmin: false,
+        createdAt: new Date().toISOString(),
+      });
+      
       return { success: true };
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -133,11 +176,22 @@ export function AppProvider({ children }) {
     update(orderRef, { status });
   };
 
+  const updateOrderDelivery = (firebaseKey, deliveryData) => {
+    const orderRef = ref(db, `orders/${firebaseKey}`);
+    update(orderRef, { delivery: deliveryData });
+  };
+
+  const updateOrderNote = (firebaseKey, note) => {
+    const orderRef = ref(db, `orders/${firebaseKey}`);
+    update(orderRef, { adminNote: note });
+  };
+
   return (
     <AppContext.Provider value={{
       cart, addToCart, removeFromCart, updateQty, clearCart,
       cartCount, cartTotal, user, isAdmin, login, register, logout,
-      orders, addOrder, updateOrderStatus, users,
+      orders, addOrder, updateOrderStatus, updateOrderDelivery, updateOrderNote,
+      users,
     }}>
       {children}
     </AppContext.Provider>

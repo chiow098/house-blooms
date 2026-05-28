@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserSessionPersistence } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAREMuBPlhoj7ZEoIorZxd5l6QSGh4C1-k",
@@ -15,3 +15,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
+
+// Optional: set persistence ke sessionStorage (tiap tab terpisah)
+setPersistence(auth, browserSessionPersistence);
